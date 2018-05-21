@@ -1,27 +1,8 @@
 <style lang="less">
-  .userinfo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .userinfo-avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 50%;
-  }
-
-  .userinfo-nickname {
-    color: #aaa;
-  }
 </style>
 <template>
   <view class="container">
-    <view class="userinfo" @tap="handleViewTap">
-      <image class="userinfo-avatar" src="{{ userInfo.avatarUrl }}" background-size="cover"/>
-      <view class="userinfo-nickname">{{ userInfo.nickName }}</view>
-    </view>
-
+    <ruauserinfo></ruauserinfo>
     <panel>
       <view class="title" slot="title">测试数据绑定</view>
 
@@ -41,6 +22,7 @@
       <button @tap="toast" size="mini">第三方组件</button>
       <button @tap="communicate" size="mini">组件通信</button>
       <button @tap="tap" size="mini">混合TAP事件</button>
+      <button @tap="getImages" size="mini">添加图片</button>
     </panel>
 
     <panel>
@@ -83,6 +65,7 @@
 <script>
   import wepy from 'wepy'
   import { connect } from 'wepy-redux'
+  import RuaUserInfo from '@/components/userInfo'
   import Panel from '@/components/panel' // alias example
   import Counter from 'counter' // alias example
   import List from '../components/list' // aliasFields example
@@ -107,9 +90,10 @@
 
   export default class Index extends wepy.page {
     config = {
-      navigationBarTitleText: 'test'
+      navigationBarTitleText: '首页'
     }
     components = {
+      ruauserinfo: RuaUserInfo,
       panel: Panel,
       counter1: Counter,
       counter2: Counter,
@@ -192,7 +176,7 @@
         })
 
         promise.then((d) => {
-          console.log('toast done')
+          console.log('toast done', d)
         })
       },
       tap () {
@@ -223,6 +207,17 @@
       counterEmit (...args) {
         let $event = args[args.length - 1]
         console.log(`${this.$name} receive ${$event.name} from ${$event.source.$name}`)
+      },
+      getImages () {
+        wx.chooseImage({
+          count: 1, // 默认9
+          sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+          sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+          success: function (res) {
+            // 返回选定照片的本地文件路径列表，tempFilePath可以作为img标签的src属性显示图片
+            console.log(res.tempFilePaths)
+          }
+        })
       }
     }
 
@@ -234,21 +229,6 @@
     }
 
     onLoad() {
-      let self = this
-      this.$parent.getUserInfo(function (userInfo) {
-        if (userInfo) {
-          self.userInfo = userInfo
-        }
-        self.normalTitle = '标题已被修改'
-
-        self.setTimeoutTitle = '标题三秒后会被修改'
-        setTimeout(() => {
-          self.setTimeoutTitle = '到三秒了'
-          self.$apply()
-        }, 3000)
-
-        self.$apply()
-      })
     }
   }
 </script>
