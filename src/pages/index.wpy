@@ -2,7 +2,8 @@
 </style>
 <template>
   <view class="container">
-    <ruauserinfo></ruauserinfo>
+    <ruaUserinfo></ruaUserinfo>
+    <ruaCity></ruaCity>
     <panel>
       <view class="title" slot="title">测试数据绑定</view>
 
@@ -66,6 +67,7 @@
   import wepy from 'wepy'
   import { connect } from 'wepy-redux'
   import RuaUserInfo from '@/components/userInfo'
+  import RuaCity from '@/components/city'
   import Panel from '@/components/panel' // alias example
   import Counter from 'counter' // alias example
   import List from '../components/list' // aliasFields example
@@ -93,7 +95,8 @@
       navigationBarTitleText: '首页啊'
     }
     components = {
-      ruauserinfo: RuaUserInfo,
+      ruaUserinfo: RuaUserInfo,
+      ruaCity: RuaCity,
       panel: Panel,
       counter1: Counter,
       counter2: Counter,
