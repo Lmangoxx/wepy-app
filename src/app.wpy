@@ -1,4 +1,6 @@
 <style lang="less">
+  @import './styles/fonts/iconfont';
+  @import './styles/variables';
   .container {
     height: 100%;
     display: flex;
@@ -28,19 +30,25 @@
         backgroundTextStyle: 'light',
         navigationBarBackgroundColor: '#fff',
         navigationBarTitleText: 'WeChat',
-        navigationBarTextStyle: 'black'
+        navigationBarTextStyle: 'black',
+        enablePullDownRefresh: true,
+        backgroundColor: '#eeeeee'
       },
-      tagBar: {
-        color: '#999999',
-        selectedColor: '#ff6a3c',
+      tabBar: {
+        color: '#8a8a8a',
+        selectedColor: '#17abe3',
         backgroundColor: '#ffffff',
-        borderStyle: 'black',
+        borderStyle: '#8a8a8a',
         list: [{
           pagePath: 'pages/index',
-          text: '首页'
+          text: '首页',
+          iconPath: './images/tabbar/home.png',
+          selectedIconPath: './images/tabbar/home-active.png'
         }, {
           pagePath: 'pages/weather',
-          text: '天气'
+          text: '天气',
+          iconPath: './images/tabbar/weather.png',
+          selectedIconPath: './images/tabbar/weather-active.png'
         }]
       }
     }

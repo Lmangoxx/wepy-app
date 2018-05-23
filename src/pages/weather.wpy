@@ -1,8 +1,17 @@
 <style lang="less">
+  @import '../styles/variables';
+  i {
+    color: @--color-primary;
+  }
 </style>
 <template>
   <view class="container">
-    {{weatherData}}
+    <view>城市：{{weatherData.currentCity}}</view>
+    <view>PM2.5：{{weatherData.pm25}}</view>
+    <view>日期：{{weatherData.date}}</view>
+    <view>温度：{{weatherData.temperature}}</view>
+    <view>天气：<i class="icon-qing"></i>{{weatherData.weatherDesc}}</view>
+    <view>风力：{{weatherData.wind}}</view>
   </view>
 </template>
 
@@ -17,7 +26,7 @@
     }
 
     data = {
-      weatherData: '获取中...'
+      weatherData: {}
     }
 
     computed = {
@@ -37,9 +46,7 @@
       BMap.weather({
         success (data) {
           console.log(data)
-          let weatherData = data.currentWeather[0]
-          weatherData = '城市：' + weatherData.currentCity + '\n' + 'PM2.5：' + weatherData.pm25 + '\n' + '日期：' + weatherData.date + '\n' + '温度：' + weatherData.temperature + '\n' + '天气：' + weatherData.weatherDesc + '\n' + '风力：' + weatherData.wind + '\n'
-          self.weatherData = weatherData
+          self.weatherData = data.currentWeather[0]
           self.$apply()
         },
         fail (err) {
