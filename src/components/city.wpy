@@ -16,7 +16,7 @@
     data = {
       cityName: '定位中...'
     }
-    onLoad() {
+    async onLoad() {
       const self = this
       wx.getLocation({
         type: 'wgs84',

@@ -2,6 +2,7 @@
   @import '../styles/variables';
   i {
     color: @--color-primary;
+    font-size: 30px;
   }
 </style>
 <template>
@@ -10,7 +11,7 @@
     <view>PM2.5：{{weatherData.pm25}}</view>
     <view>日期：{{weatherData.date}}</view>
     <view>温度：{{weatherData.temperature}}</view>
-    <view>天气：<i class="icon-qing"></i>{{weatherData.weatherDesc}}</view>
+    <view>天气：<i class="icon-duoyunye"></i>{{weatherData.weatherDesc}}</view>
     <view>风力：{{weatherData.wind}}</view>
   </view>
 </template>
@@ -37,8 +38,7 @@
 
     events = {
     }
-
-    onLoad() {
+    async onLoad() {
       let self = this
       let BMap = new bmap.BMapWX({
         ak: '7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH'
@@ -50,7 +50,7 @@
           self.$apply()
         },
         fail (err) {
-          console.log('fail!!!!', err)
+          console.log('BMap.weather is error!', err)
         }
       })
     }
