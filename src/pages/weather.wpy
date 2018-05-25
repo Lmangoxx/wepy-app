@@ -38,7 +38,7 @@
 
     events = {
     }
-    async onLoad() {
+    onLoad() {
       let self = this
       let BMap = new bmap.BMapWX({
         ak: '7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH'
