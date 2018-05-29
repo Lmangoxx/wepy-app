@@ -18,38 +18,29 @@
 
 <script>
   import wepy from 'wepy'
-
-  const bmap = require('@/libs/bmap-wx/bmap-wx.min')
-
+  const bmap = require('@/libs/bmap/bmap.min')
   export default class Weather extends wepy.page {
     config = {
       navigationBarTitleText: '天气'
     }
-
     data = {
       weatherData: {}
     }
-
-    computed = {
-    }
-
-    methods = {
-    }
-
-    events = {
-    }
+    computed = {}
+    methods = {}
+    events = {}
     onLoad() {
       let self = this
       let BMap = new bmap.BMapWX({
-        ak: '7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH'
+        ak: self.$parent.globalData.ak
       })
       BMap.weather({
-        success (data) {
+        success(data) {
           console.log(data)
           self.weatherData = data.currentWeather[0]
           self.$apply()
         },
-        fail (err) {
+        fail(err) {
           console.log('BMap.weather is error!', err)
         }
       })

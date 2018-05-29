@@ -26,7 +26,7 @@
           // var speed = res.speed
           // var accuracy = res.accuracy
           wx.request({
-            url: 'https://api.map.baidu.com/geocoder/v2/?ak=7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH&location=' + latitude + ',' + longitude + '&output=json',
+            url: 'https://api.map.baidu.com/geocoder/v2/?ak=' + self.$root.$parent.globalData.ak + '&location=' + latitude + ',' + longitude + '&output=json',
             success(res) {
               let data = res.data
               if (data.status === 0) {
