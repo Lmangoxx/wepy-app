@@ -1,39 +1,30 @@
 <style lang="less">
+
 </style>
+
 <template>
-  <view class="container">
-    <ruaUserinfo></ruaUserinfo>
-    <ruaCity></ruaCity>
-  </view>
+	<view class="container">
+		<ruaUserinfo></ruaUserinfo>
+		<ruaCity></ruaCity>
+	</view>
 </template>
 
 <script>
-  import wepy from 'wepy'
-  import RuaUserInfo from '@/components/userInfo'
-  import RuaCity from '@/components/city'
-
-  export default class Index extends wepy.page {
-    config = {
-      navigationBarTitleText: '首页'
-    }
-    components = {
-      ruaUserinfo: RuaUserInfo,
-      ruaCity: RuaCity
-    }
-
-    data = {
-    }
-
-    computed = {
-    }
-
-    methods = {
-    }
-
-    events = {
-    }
-
-    onLoad() {
-    }
-  }
+	import wepy from 'wepy'
+	import RuaUserInfo from '@/components/userInfo'
+	import RuaCity from '@/components/city'
+	export default class Index extends wepy.page {
+		config = {
+			navigationBarTitleText: '首页'
+		}
+		components = {
+			ruaUserinfo: RuaUserInfo,
+			ruaCity: RuaCity
+		}
+		data = {}
+		computed = {}
+		methods = {}
+		events = {}
+		onLoad() {}
+	}
 </script>

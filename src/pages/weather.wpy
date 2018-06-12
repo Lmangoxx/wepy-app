@@ -1,49 +1,54 @@
 <style lang="less">
-  @import '../styles/variables';
-  i {
-    color: @--color-primary;
-    font-size: 30px;
-  }
+	@import '../styles/variables';
+	.weather-cell {
+		width: 100%;
+		height: 100vh;
+		background: @--color-primary;
+		color: white;
+	}
+	i {
+		color: @--color-primary;
+		font-size: 30px;
+	}
 </style>
+
 <template>
-  <view class="container">
-    <view>城市：{{weatherData.currentCity}}</view>
-    <view>PM2.5：{{weatherData.pm25}}</view>
-    <view>日期：{{weatherData.date}}</view>
-    <view>温度：{{weatherData.temperature}}</view>
-    <view>天气：<i class="icon-duoyunye"></i>{{weatherData.weatherDesc}}</view>
-    <view>风力：{{weatherData.wind}}</view>
-  </view>
+	<view class="weather-cell">
+		<view>城市：{{weatherData.currentCity}}</view>
+		<view>PM2.5：{{weatherData.pm25}}</view>
+		<view>日期：{{weatherData.date}}</view>
+		<view>温度：{{weatherData.temperature}}</view>
+		<view>天气：<i class="icon-duoyunye"></i>{{weatherData.weatherDesc}}</view>
+		<view>风力：{{weatherData.wind}}</view>
+	</view>
 </template>
 
 <script>
-  import wepy from 'wepy'
-  const bmap = require('@/libs/bmap/bmap.min')
-  export default class Weather extends wepy.page {
-    config = {
-      navigationBarTitleText: '天气'
-    }
-    data = {
-      weatherData: {}
-    }
-    computed = {}
-    methods = {}
-    events = {}
-    onLoad() {
-      let self = this
-      let BMap = new bmap.BMapWX({
-        ak: self.$parent.globalData.ak
-      })
-      BMap.weather({
-        success(data) {
-          console.log(data)
-          self.weatherData = data.currentWeather[0]
-          self.$apply()
-        },
-        fail(err) {
-          console.log('BMap.weather is error!', err)
-        }
-      })
-    }
-  }
+	import wepy from 'wepy'
+	const bmap = require('@/libs/bmap/bmap')
+	export default class Weather extends wepy.page {
+		config = {
+			navigationBarTitleText: '天气'
+		}
+		data = {
+			weatherData: {}
+		}
+		computed = {}
+		methods = {}
+		events = {}
+		onLoad() {
+			let self = this
+			let BMap = new bmap.BMapWX()
+			console.log(self.$parent.globalData.location)
+			BMap.weather({
+				success(data) {
+					self.weatherData = data.currentWeather[0]
+					self.$apply()
+				},
+				fail(err) {
+					console.log('BMap.weather is error!', err)
+				}
+			})
+		}
+	}
 </script>

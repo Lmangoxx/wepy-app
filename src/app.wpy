@@ -1,79 +1,76 @@
 <style lang="less">
-  // 引入字体 
-  @import './styles/fonts/iconfont';
-  @import './styles/variables';
-  .container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    box-sizing: border-box;
-  }
+	// 引入字体 
+	@import './styles/fonts/iconfont';
+	@import './styles/variables';
+	.container {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+		box-sizing: border-box;
+	}
 </style>
 
 <script>
-  import wepy from 'wepy'
-  import 'wepy-async-function'
-  import {
-    setStore
-  } from 'wepy-redux'
-  import configStore from './store'
-  const store = configStore()
-  setStore(store)
-  export default class extends wepy.app {
-    config = {
-      pages: [
-        'pages/weather',
-        'pages/index'
-      ],
-      window: {
-        backgroundTextStyle: 'light',
-        navigationBarBackgroundColor: '#fff',
-        navigationBarTitleText: 'WeChat',
-        navigationBarTextStyle: 'black',
-        enablePullDownRefresh: true,
-        backgroundColor: '#eeeeee'
-      },
-      tabBar: {
-        color: '#8a8a8a',
-        selectedColor: '#17abe3',
-        backgroundColor: '#ffffff',
-        borderStyle: '#8a8a8a',
-        list: [{
-          pagePath: 'pages/index',
-          text: '首页',
-          iconPath: './images/tabbar/home.png',
-          selectedIconPath: './images/tabbar/home-active.png'
-        }, {
-          pagePath: 'pages/weather',
-          text: '天气',
-          iconPath: './images/tabbar/weather.png',
-          selectedIconPath: './images/tabbar/weather-active.png'
-        }]
-      }
-    }
-    globalData = {
-      ak: '7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH'
-    }
-    constructor() {
-      super()
-      // this.use('requestfix')
-      this.use('promisify')
-    }
-    onLaunch() {
-      this.testAsync()
-    }
-    sleep(s) {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve('promise resolved')
-        }, s * 1000)
-      })
-    }
-    async testAsync() {
-      const data = await this.sleep(3)
-      console.log(data)
-    }
-  }
+	import wepy from 'wepy'
+	import 'wepy-async-function'
+	import {
+		setStore
+	} from 'wepy-redux'
+	import configStore from './store'
+	const store = configStore()
+	setStore(store)
+	import API from '@/api/index.js'
+	export default class extends wepy.app {
+		config = {
+			pages: [
+				'pages/movie',
+				'pages/weather',
+				'pages/index'
+			],
+			window: {
+				backgroundTextStyle: 'light',
+				navigationBarBackgroundColor: '#e54847',
+				navigationBarTitleText: 'WeChat',
+				navigationBarTextStyle: 'white',
+				backgroundColor: '#eeeeee'
+			},
+			tabBar: {
+				color: '#8a8a8a',
+				selectedColor: '#17abe3',
+				backgroundColor: '#ffffff',
+				borderStyle: '#ddd',
+				list: [{
+					pagePath: 'pages/index',
+					text: '首页',
+					iconPath: './images/tabbar/home.png',
+					selectedIconPath: './images/tabbar/home-active.png'
+				}, {
+					pagePath: 'pages/weather',
+					text: '天气',
+					iconPath: './images/tabbar/weather.png',
+					selectedIconPath: './images/tabbar/weather-active.png'
+				}, {
+					pagePath: 'pages/movie',
+					text: '电影',
+					iconPath: './images/tabbar/weather.png',
+					selectedIconPath: './images/tabbar/weather-active.png'
+				}]
+			}
+		}
+		globalData = {
+			location: ''
+		}
+		constructor() {
+			super()
+			// this.use('requestfix')
+			this.use('promisify')
+		}
+		async onLaunch() {
+			const location = await new API().location()
+			this.globalData.location = location
+			// this.$apply()
+		}
+	}
 </script>

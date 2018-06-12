@@ -16,7 +16,7 @@ class BMapWX {
      * @constructor
      */
     constructor(param) {
-        this.ak = param["ak"];
+        this.ak = '7vOk8dIwoZQIUVD9vK1kO4k4im4KMxPH';
     }
 
     /**

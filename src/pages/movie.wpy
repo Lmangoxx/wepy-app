@@ -1,0 +1,158 @@
+<template>
+	<view class="movie-cell">
+		<view class="movie-tags">
+			<view class="city-cell">
+				{{location}}
+				<i></i>
+			</view>
+		</view>
+		<view class="movie-list" wx:for="{{movieData}}" wx:key="item">
+			<image class="movie-image" src="{{item.movie_picture}}" />
+			<view class="movie-info">
+				<view class="name">
+					{{item.movie_name}}
+					<i class="icon-3d" wx:if="{{item.movie_type !== '2D'}}">
+									<image src="../images/3D.png" />
+								</i>
+					<span>{{item.movie_score}}<em>分</em></span>
+				</view>
+				<view class="tags">{{item.movie_tags}}</view>
+				<view class="starring" wx:if="{{item.movie_starring !== ''}}">主演:{{item.movie_starring}}</view>
+				<view class="message" wx:else>{{item.movie_message}}</view>
+				<view class="release_date">{{item.movie_release_date}} 上映</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	import API from '@/api/index.js'
+	export default class Movie extends wepy.page {
+		config = {
+			navigationBarTitleText: '电影',
+			enablePullDownRefresh: true
+		}
+		data = {
+			location: '定位中',
+			movieData: []
+		}
+		components = {
+		}
+		methods = {}
+		events = {}
+		onLoad() {
+			this.getMovieList()
+		}
+		onPullDownRefresh() {
+			this.getMovieList()
+		}
+		async getMovieList() {
+			let self = this
+			wx.showLoading({
+				title: '数据加载中'
+			})
+			let APIS = new API()
+			APIS.movie({
+				location: self.$parent.globalData.location,
+				success(res) {
+					wx.hideLoading()
+					wx.stopPullDownRefresh()
+					self.location = res.cityname
+					self.movieData = res.movie
+					self.$apply()
+				},
+				fail(err) {
+					console.log(err)
+					wx.showToast({
+						title: '服务器忙,请稍后再试',
+						icon: 'none',
+						duration: 2000
+					})
+				}
+			})
+		}
+	}
+</script>
+
+<style lang="less">
+	@import '../styles/variables';
+	@--movie-tags-height-default: 87rpx;
+	@--movie-list-height-default: 182rpx; // 291
+	@--movie-list-image-width-default: 130rpx; // 208
+	@--movie-layout-default: 26rpx;
+	@--movie-border-default: 0.5rpx solid @--border-color-default;
+	.movie-tags {
+		height: @--movie-tags-height-default;
+		line-height: @--movie-tags-height-default;
+		font-size: 27.5rpx;
+		color: #666;
+		border-bottom: @--movie-border-default;
+	}
+	.city-cell {
+		display: inline-block;
+		position: relative;
+		padding-left: 30rpx;
+		padding-right: 26rpx;
+		i {
+			position: absolute;
+			top: 50%;
+			right: 0;
+			display: inline-block;
+			width: 0;
+			height: 0;
+			border: 10rpx solid #b0b0b0;
+			border-left-color: transparent;
+			border-right-color: transparent;
+			border-bottom: none;
+			margin-top: -5rpx;
+		}
+	}
+	.movie-list {
+		height: @--movie-list-height-default;
+		margin-left: @--movie-layout-default;
+		padding: @--movie-layout-default;
+		padding-left: 0;
+		border-bottom: @--movie-border-default;
+		.movie-image {
+			width: @--movie-list-image-width-default;
+			height: @--movie-list-height-default;
+			float: left;
+		}
+		.movie-info {
+			padding-left: @--movie-list-image-width-default + 27rpx;
+			font-size: 27.5rpx;
+			color: #666;
+			view {
+				margin-bottom: 7rpx;
+			}
+			.name {
+				font-size: 34rpx;
+				color: @--color-black;
+				i.icon-3d {
+					display: inline-block;
+					image {
+						width: 86rpx;
+						height: 28rpx;
+					}
+				}
+				span {
+					float: right;
+					color: #faaf00;
+					em {
+						font-size: 22rpx;
+						padding-left: 3rpx;
+					}
+				}
+			}
+			.starring {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.release_date {
+				color: #999;
+			}
+		}
+	}
+</style>
