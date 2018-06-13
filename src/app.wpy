@@ -21,13 +21,14 @@
 	import configStore from './store'
 	const store = configStore()
 	setStore(store)
-	import API from '@/api/index.js'
+	import API from '@/api/index'
 	export default class extends wepy.app {
 		config = {
 			pages: [
 				'pages/movie',
 				'pages/weather',
-				'pages/index'
+				'pages/index',
+				'pages/city'
 			],
 			window: {
 				backgroundTextStyle: 'light',

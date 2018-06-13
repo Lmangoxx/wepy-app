@@ -1,0 +1,366 @@
+<template>
+	<view class="city-cell">
+		<!-- 搜索框 -->
+		<view class="search-bar">
+			<view class="search-input">
+				<image class="search" src="../images/search.png" />
+				<input type="text" class="input" @focus="onFocus()" value="{{searchValue}}" @input="onInput({{$event}})" confirm-type="search" placeholder="城市名、拼音" />
+				<image wx:if="{{showClear}}" @tap="clearInput()" class="clear" src="../images/clear.png" />
+			</view>
+			<text wx:if="{{showSearch}}" class="search-cancel" @tap="hideSearchResult()">取消</text>
+		</view>
+		<!-- 搜索结果 -->
+		<view wx:if="{{showSearch}}" class="mask" style="height: calc(100vh - 40px)" @tap="hideSearchResult()">
+			<scroll-view wx:if="{{searchResult.length}}" style="height: 100%; width: 100%; background-color: white" scroll-y>
+				<view class="city-list">
+					<repeat for="{{searchResult}}">
+						<view class="city-item" @tap.stop="goto({{item.name}})">
+							{{ item.name }}
+						</view>
+					</repeat>
+				</view>
+			</scroll-view>
+		</view>
+		<!-- 列表 -->
+		<scroll-view class="fit scroll" scroll-y scroll-into-view="{{scrollIntoId}}">
+			<!-- 当前定位 -->
+			<view class="city-header">定位城市</view>
+			<view class="city-content cf">
+				<view class="city-info" wx:if="{{locationFail}}">定位失败</view>
+				<view class="city-info" wx:else @tap.stop="goto({{location}})">
+					{{ location ? location : '定位中...' }}
+				</view>
+			</view>
+			<!-- 热门城市 -->
+			<view class="city-header">热门城市</view>
+			<view class="city-content cf">
+				<view class="city-info" wx:for="{{hotCitys}}" wx:key="item" @tap.stop="goto({{item.name}})">
+					{{item.name}}
+				</view>
+			</view>
+			<!-- 所有城市 -->
+			<repeat for="{{citys}}" key="letter.letter" item="letter">
+				<view class="city-header" id="{{letter.letter}}">{{ letter.letter }}</view>
+				<view class="city-list">
+					<repeat for="{{letter.cityInfo}}" key="city.id" item="city">
+						<view class="city-item" @tap="goto({{city.name}})">
+							{{city.name}}
+						</view>
+					</repeat>
+				</view>
+			</repeat>
+			<view class="index-list">
+				<repeat for="{{letters}}">
+					<view class="index-list-item" data-letter="{{item}}" @touchstart.stop="onListTouchStart" @touchmove.stop="onListTouchMove" @touchend.stop="onListTouchEnd">{{ item }}</view>
+				</repeat>
+			</view>
+			<view wx:if="{{currentLetter}}" class="letter-notify">{{ currentLetter }}</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	import API from '@/api/index'
+	import citys from '@/libs/city'
+	const hotCode = ['110100', '310000', '440100', '440300', '330100', '320100']
+	export default class City extends wepy.page {
+		config = {
+			navigationBarTitleText: '选择城市'
+		}
+		data = {
+			page: '',
+			citys: [],
+			hotCitys: [],
+			letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z'],
+			scrollIntoId: '',
+			currentLetter: '',
+			location: '',
+			locationFail: false,
+			letterHeight: 18,
+			startPageY: 0,
+			timer: null,
+			searchValue: '',
+			showSearch: false,
+			showClear: false,
+			searchResult: []
+		}
+		methods = {
+			onListTouchStart({
+				currentTarget,
+				touches
+			}) {
+				const letter = currentTarget.dataset.letter
+				this.onLetterTaped(letter)
+				this.startPageY = touches[0].pageY
+			},
+			onListTouchMove({
+				currentTarget,
+				touches
+			}) {
+				const letter = currentTarget.dataset.letter
+				const index = this.letters.indexOf(letter)
+				const pageY = touches[0].pageY
+				let dist = ~~(Math.abs(this.startPageY - pageY) / this.letterHeight)
+				let isUp = false
+				if (this.startPageY - pageY > 0) {
+					isUp = true
+				}
+				if (dist) {
+					let i = isUp ? index - dist : index + dist
+					i < 0 && (i = 0)
+					i > this.letters.length - 1 && (i = this.letters.length - 1)
+					this.onLetterTaped(this.letters[i])
+				}
+			},
+			onListTouchEnd() {
+				if (this.timer) {
+					clearTimeout(this.timer)
+				}
+				this.timer = setTimeout(() => {
+					clearTimeout(this.timer)
+					this.currentLetter = ''
+					this.timer = null
+					this.$apply()
+				}, 750)
+			},
+			onFocus() {
+				this.showSearch = true
+			},
+			hideSearchResult() {
+				this.searchValue = ''
+				this.showSearch = false
+				// this.searchResult = []
+				// this.$apply()
+			},
+			onInput({
+				detail: {
+					value
+				}
+			}) {
+				let data = value.trim()
+				this.searchValue = data
+				if (!data) {
+					this.showClear = false
+					return []
+				}
+				this.showClear = true
+				const reg = new RegExp(data, 'ig')
+				this.searchResult = citys.filter(i => {
+					return reg.test(i.name) || reg.test(i.search)
+				})
+			},
+			clearInput() {
+				this.searchValue = ''
+				this.showClear = false
+			},
+			goto(city) {
+				this.$parent.globalData.location = city
+				wx.navigateBack({
+					delta: 1
+				})
+			}
+		}
+		async onLoad(options) {
+			this.page = options.page
+			wx.setNavigationBarTitle({
+				title: `当前城市-${options.city}`
+			})
+			this.citys = this.getLetterCity()
+			this.hotCitys = this.getHotCity()
+			wx.showLoading({
+				title: '加载中'
+			})
+			try {
+				this.location = await new API().location()
+				this.$apply()
+			} catch (error) {
+				this.locationFail = true
+				this.$apply()
+			} finally {
+				wx.hideLoading()
+			}
+		}
+		onLetterTaped(letter) {
+			this.scrollIntoId = letter === '#' ? 'top' : letter
+			this.currentLetter = letter
+		}
+		getLetterCity() {
+			let tempObj = []
+			// letters.shift()
+			for (let i = 0; i < this.letters.length; i++) {
+				let letter = this.letters[i]
+				let cityInfo = []
+				let tempArr = {}
+				tempArr.letter = letter
+				for (let j = 0; j < citys.length; j++) {
+					if (letter === citys[j].letter) {
+						cityInfo.push(citys[j])
+					}
+				}
+				tempArr.cityInfo = cityInfo
+				tempObj.push(tempArr)
+			}
+			return tempObj
+		}
+		getHotCity() {
+			const cityInfo = []
+			for (let item of citys) {
+				if (hotCode.indexOf(item.code) !== -1) {
+					cityInfo.push(item)
+				}
+			}
+			this.letters.unshift('#')
+			return cityInfo.sort((a, b) => a.code > b.code)
+		}
+	}
+</script>
+
+<style lang="less">
+	@import '../styles/commont';
+	@--city-search-height-default: 94rpx;
+	@--city-layout-default: 30rpx;
+	@--city-border-default: 0.5rpx solid #e6e6e6;
+	.city-cell {
+		height: 100vh;
+		width: 100vw;
+		font-size: 28rpx;
+		color: #222;
+		display: flex;
+		flex-direction: column;
+	}
+	.city-header {
+		line-height: 63rpx;
+		background-color: #ebebeb;
+		padding-left: @--city-layout-default;
+	}
+	.city-content {
+		background-color: #f5f5f5;
+		padding-bottom: @--city-layout-default;
+		padding-right: @--city-layout-default + 15rpx;
+		.city-info {
+			float: left;
+			background: #fff;
+			width: 29%;
+			height: 66rpx;
+			line-height: 66rpx;
+			margin-top: @--city-layout-default;
+			margin-left: @--city-layout-default;
+			border: @--city-border-default;
+			border-radius: 6rpx;
+			text-align: center;
+			box-sizing: border-box;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+	.search-bar {
+		display: flex;
+		top: 0;
+		flex-direction: row;
+		border-bottom: @--city-border-default;
+		background-color: #f5f5f5;
+		padding: 20rpx;
+		.search-input {
+			position: relative;
+			flex: 1;
+			padding: 0 60rpx;
+			border: @--city-border-default;
+			border-radius: 10rpx;
+			box-sizing: border-box;
+			background-color: white;
+			color: #000;
+			image {
+				position: absolute;
+				width: 30rpx;
+				height: 30rpx;
+				top: 50%;
+				margin-top: -14rpx;
+				&.search {
+					left: 20rpx;
+				}
+				&.clear {
+					right: 20rpx;
+				}
+			}
+			.input {
+				height: 60rpx;
+				line-height: 60rpx;
+			}
+		}
+		.search-cancel {
+			color: #666;
+			line-height: 60rpx;
+			padding-left: 16rpx;
+			font-size: 33rpx;
+			color: @--color-primary;
+		}
+	}
+	.mask {
+		// height: 100vh;
+		width: 100vw;
+		background-color: rgba(0, 0, 0, .7);
+		position: fixed;
+		top: @--city-search-height-default;
+		left: 0;
+		z-index: 1;
+	}
+	.scroll {
+		flex: 1;
+		height: 0;
+		width: 100%;
+		background-color: #eee
+	}
+	.city-list {
+		padding: 0 @--city-layout-default + 15rpx 0 @--city-layout-default;
+		background-color: white;
+	}
+	.city-item {
+		height: 74rpx;
+		line-height: 74rpx;
+		&+& {
+			border-top: @--city-border-default;
+		}
+		&:active {
+			opacity: .7;
+		}
+	}
+	.index-list {
+		height: 828rpx;
+		width: 60rpx; // background-color: red;
+		position: fixed;
+		right: 0px;
+		top: 50%;
+		margin-top: -414rpx; // top: calc(10vh + 40px);
+		display: flex;
+		flex-direction: column;
+	}
+	.index-list-item {
+		width: 100%; // flex: 1;
+		height: 20rpx;
+		line-height: 2;
+		font-size: 24rpx;
+		display: flex;
+		padding-left: 10rpx;
+		padding-top: 8rpx;
+		padding-bottom: 8rpx;
+		justify-content: center;
+		align-items: center;
+	}
+	.letter-notify {
+		height: 160rpx;
+		width: 160rpx;
+		background-color: rgba(0, 0, 0, .7);
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		margin-top: -80rpx;
+		margin-left: -80rpx;
+		border-radius: 10rpx;
+		color: white;
+		line-height: 160rpx;
+		font-size: 100rpx;
+		text-align: center;
+	}
+</style>

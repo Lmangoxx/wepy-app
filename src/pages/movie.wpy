@@ -1,10 +1,7 @@
 <template>
 	<view class="movie-cell">
 		<view class="movie-tags">
-			<view class="city-cell">
-				{{location}}
-				<i></i>
-			</view>
+			<view class="city-cell" @tap.stop="goto('/pages/city?city={{location}}&page=movie')">{{location ? location : '定位中'}}<i></i></view>
 		</view>
 		<view class="movie-list" wx:for="{{movieData}}" wx:key="item">
 			<image class="movie-image" src="{{item.movie_picture}}" />
@@ -12,8 +9,8 @@
 				<view class="name">
 					{{item.movie_name}}
 					<i class="icon-3d" wx:if="{{item.movie_type !== '2D'}}">
-									<image src="../images/3D.png" />
-								</i>
+						<image src="../images/3D.png" />
+					</i>
 					<span>{{item.movie_score}}<em>分</em></span>
 				</view>
 				<view class="tags">{{item.movie_tags}}</view>
@@ -34,20 +31,23 @@
 			enablePullDownRefresh: true
 		}
 		data = {
-			location: '定位中',
+			location: '',
 			movieData: []
 		}
-		components = {
+		methods = {
+			goto(url) {
+				wx.navigateTo({url: url})
+			}
 		}
-		methods = {}
-		events = {}
-		onLoad() {
+		onShow() {
 			this.getMovieList()
+		}
+		onLoad() {
 		}
 		onPullDownRefresh() {
 			this.getMovieList()
 		}
-		async getMovieList() {
+		getMovieList() {
 			let self = this
 			wx.showLoading({
 				title: '数据加载中'
@@ -64,6 +64,8 @@
 				},
 				fail(err) {
 					console.log(err)
+					wx.hideLoading()
+					wx.stopPullDownRefresh()
 					wx.showToast({
 						title: '服务器忙,请稍后再试',
 						icon: 'none',
@@ -77,6 +79,7 @@
 
 <style lang="less">
 	@import '../styles/variables';
+	@--movie-font-size-default: 27.5rpx;
 	@--movie-tags-height-default: 87rpx;
 	@--movie-list-height-default: 182rpx; // 291
 	@--movie-list-image-width-default: 130rpx; // 208
@@ -85,7 +88,7 @@
 	.movie-tags {
 		height: @--movie-tags-height-default;
 		line-height: @--movie-tags-height-default;
-		font-size: 27.5rpx;
+		font-size: @--movie-font-size-default;
 		color: #666;
 		border-bottom: @--movie-border-default;
 	}
@@ -121,7 +124,7 @@
 		}
 		.movie-info {
 			padding-left: @--movie-list-image-width-default + 27rpx;
-			font-size: 27.5rpx;
+			font-size: @--movie-font-size-default;
 			color: #666;
 			view {
 				margin-bottom: 7rpx;
