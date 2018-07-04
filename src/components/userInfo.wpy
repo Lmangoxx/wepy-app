@@ -1,31 +1,32 @@
 <template>
-  <view class="rua-userinfo">
-    <view class="rua-userinfo--avatar">
-      <open-data type="userAvatarUrl"></open-data>
-    </view>
-    <open-data class="rua-userinfo--nickname" type="userNickName"></open-data>
-  </view>
+	<view class="rua-userinfo">
+		<view class="rua-userinfo--avatar">
+			<open-data type="userAvatarUrl"></open-data>
+		</view>
+		<open-data class="rua-userinfo--nickname" type="userNickName"></open-data>
+	</view>
 </template>
 
 <script>
-  import wepy from 'wepy'
-  export default class RuaUserInfo extends wepy.component {}
+	import wepy from 'wepy'
+	export default class RuaUserInfo extends wepy.component {
+	}
 </script>
 
 <style lang="less">
-  .rua-userinfo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .rua-userinfo--avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 100%;
-    overflow: hidden;
-  }
-  .rua-userinfo--nickname {
-    color: #aaa;
-    font-size: 12px;
-  }
+	.rua-userinfo {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+	.rua-userinfo--avatar {
+		width: 80rpx;
+		height: 80rpx;
+		border-radius: 100%;
+		overflow: hidden;
+	}
+	.rua-userinfo--nickname {
+		color: #aaa;
+		font-size: 12px;
+	}
 </style>

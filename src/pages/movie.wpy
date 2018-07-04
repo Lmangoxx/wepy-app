@@ -1,30 +1,39 @@
 <template>
 	<view class="movie-cell">
 		<view class="movie-tags">
-			<view class="city-cell" @tap.stop="goto('/pages/city?city={{location}}&page=movie')">{{location ? location : '定位中'}}<i></i></view>
+			<RuaLocation :location.sync="location"></RuaLocation>
+			<RuaSearch class="movie-search" :value="searchValue" placeholder="找影视剧"></RuaSearch>
 		</view>
-		<view class="movie-list" wx:for="{{movieData}}" wx:key="item">
-			<image class="movie-image" src="{{item.movie_picture}}" />
-			<view class="movie-info">
-				<view class="name">
-					{{item.movie_name}}
-					<i class="icon-3d" wx:if="{{item.movie_type !== '2D'}}">
-						<image src="../images/3D.png" />
-					</i>
-					<span>{{item.movie_score}}<em>分</em></span>
+		<view wx:if="{{resultData.length}}">
+			<repeat for="{{resultData}}" key="item" index="index" item="item">
+				<view class="movie-list">
+					<image class="movie-image" src="{{item.movie_picture}}" />
+					<view class="movie-info">
+						<view class="name">
+							{{item.movie_name}}
+							<i class="icon-3d" wx:if="{{item.movie_type !== '2D'}}">
+								<image src="../images/3D.png" />
+							</i>
+							<span>{{item.movie_score}}<em>分</em></span>
+						</view>
+						<view class="tags">{{item.movie_tags}}</view>
+						<view class="starring" wx:if="{{item.movie_starring !== ''}}">主演:{{item.movie_starring}}</view>
+						<view class="message" wx:else>{{item.movie_message}}</view>
+						<view class="release_date">{{item.movie_release_date}} 上映</view>
+					</view>
 				</view>
-				<view class="tags">{{item.movie_tags}}</view>
-				<view class="starring" wx:if="{{item.movie_starring !== ''}}">主演:{{item.movie_starring}}</view>
-				<view class="message" wx:else>{{item.movie_message}}</view>
-				<view class="release_date">{{item.movie_release_date}} 上映</view>
-			</view>
+			</repeat>
 		</view>
+		<NoResult wx:else></NoResult>
 	</view>
 </template>
 
 <script>
 	import wepy from 'wepy'
 	import API from '@/api/index.js'
+	import RuaLocation from '@/components/location'
+	import RuaSearch from '@/components/search'
+	import NoResult from '@/components/noResult'
 	export default class Movie extends wepy.page {
 		config = {
 			navigationBarTitleText: '电影',
@@ -32,19 +41,35 @@
 		}
 		data = {
 			location: '',
-			movieData: []
+			searchValue: '',
+			noResultStatus: false,
+			movieData: [],
+			resultData: []
+		}
+		components = {
+			RuaLocation,
+			RuaSearch,
+			NoResult
 		}
 		methods = {
 			goto(url) {
-				wx.navigateTo({url: url})
+				wx.navigateTo({
+					url: url
+				})
+			}
+		}
+		watch = {
+			searchValue(newValue, oldValue) {
+				this.resultData = this.movieData.filter(i => {
+					return i.movie_name.indexOf(newValue) !== -1
+				})
 			}
 		}
 		onShow() {
 			this.getMovieList()
 		}
-		onLoad() {
-		}
 		onPullDownRefresh() {
+			wx.stopPullDownRefresh()
 			this.getMovieList()
 		}
 		getMovieList() {
@@ -52,27 +77,26 @@
 			wx.showLoading({
 				title: '数据加载中'
 			})
+			self.location = self.$parent.globalData.location
 			let APIS = new API()
 			APIS.movie({
-				location: self.$parent.globalData.location,
+				location: self.location,
 				success(res) {
-					wx.hideLoading()
-					wx.stopPullDownRefresh()
-					self.location = res.cityname
-					self.movieData = res.movie
-					self.$apply()
+					self.movieData = self.resultData = res.movie
+					self.noResultStatus = false
+					self.loadingEnd()
 				},
 				fail(err) {
 					console.log(err)
-					wx.hideLoading()
-					wx.stopPullDownRefresh()
-					wx.showToast({
-						title: '服务器忙,请稍后再试',
-						icon: 'none',
-						duration: 2000
-					})
+					self.movieData = self.resultData = []
+					self.noResultStatus = true
+					self.loadingEnd()
 				}
 			})
+		}
+		loadingEnd() {
+			wx.hideLoading()
+			this.$apply()
 		}
 	}
 </script>
@@ -80,17 +104,22 @@
 <style lang="less">
 	@import '../styles/variables';
 	@--movie-font-size-default: 27.5rpx;
-	@--movie-tags-height-default: 87rpx;
+	@--movie-tags-height-default: 100rpx;
 	@--movie-list-height-default: 182rpx; // 291
 	@--movie-list-image-width-default: 130rpx; // 208
 	@--movie-layout-default: 26rpx;
-	@--movie-border-default: 0.5rpx solid @--border-color-default;
 	.movie-tags {
 		height: @--movie-tags-height-default;
 		line-height: @--movie-tags-height-default;
 		font-size: @--movie-font-size-default;
-		color: #666;
-		border-bottom: @--movie-border-default;
+		color: #444;
+		border-bottom: @--border-default;
+		padding-left: 30rpx;
+		display: flex;
+		background-color: #f4f4f4;
+		.movie-search {
+			flex: 1;
+		}
 	}
 	.city-cell {
 		display: inline-block;
@@ -116,7 +145,9 @@
 		margin-left: @--movie-layout-default;
 		padding: @--movie-layout-default;
 		padding-left: 0;
-		border-bottom: @--movie-border-default;
+		& + & {
+			border-top: @--border-default;
+		}
 		.movie-image {
 			width: @--movie-list-image-width-default;
 			height: @--movie-list-height-default;

@@ -4,27 +4,58 @@
 
 <template>
 	<view class="container">
-		<ruaUserinfo></ruaUserinfo>
-		<ruaCity></ruaCity>
+		<RuaLocation :location.sync="location"></RuaLocation>
+		<block wx:for="{{imagesData}}" wx:key="index" wx:for-item="item">
+			<image src="{{item}}" style="width: 100%;" mode="widthFix" @tap="previewImage({{item}})" />
+		</block>
 	</view>
 </template>
 
 <script>
 	import wepy from 'wepy'
-	import RuaUserInfo from '@/components/userInfo'
-	import RuaCity from '@/components/city'
+	import RuaLocation from '@/components/location'
 	export default class Index extends wepy.page {
 		config = {
 			navigationBarTitleText: '首页'
 		}
-		components = {
-			ruaUserinfo: RuaUserInfo,
-			ruaCity: RuaCity
+		data = {
+			location: '',
+			imagesData: [
+				'http://p0.meituan.net/movie/61443b6887b87e0d9589dd989f8a9c68194017.jpg',
+				'http://p1.meituan.net/movie/e11849f8be968d894e0c5876637e8aa8146449.jpg',
+				'http://p0.meituan.net/movie/75c9cf47c7a0d1252f70cc99d6b702e7222680.jpg',
+				'http://p1.meituan.net/movie/3618655d0a91f34fd8709a22016bdd9d147229.jpg',
+				'http://p1.meituan.net/movie/b1a322c9e73b05967efd6e823d9d4401159395.jpg',
+				'http://p0.meituan.net/movie/5611f9bd102f1e1feb08549b2628fe544391799.jpg',
+				'http://p0.meituan.net/movie/2265c6fca66c65271d7d2633e0d7a67f3203381.jpg',
+				'http://p0.meituan.net/movie/458ff4074d3214bbb3e317a2b1ffcfcc7370752.jpg',
+				'http://p0.meituan.net/mmdb/5611f9bd102f1e1feb08549b2628fe544391799.jpg',
+				'http://p0.meituan.net/mmdb/2265c6fca66c65271d7d2633e0d7a67f3203381.jpg',
+				'http://p1.meituan.net/movie/fdf1b5b93043f23483a2e631181e3b41138956.jpg',
+				'http://p1.meituan.net/mmdb/30ba5eab5f7af26ca582fb5776f7dabe468434.png',
+				'http://p1.meituan.net/mmdb/2158f9f3cb405f63f9c8bf997987475a8313499.png',
+				'http://p1.meituan.net/mmdb/c0f73c71b048b601b28b39cf120137be342590.jpg',
+				'http://p1.meituan.net/movie/4a2ec13a0d9fd41abe14c733c458595d6052520.jpg',
+				'http://p1.meituan.net/mmdb/3063d439c04ffa2f203a7e3570f472fd552541.jpg',
+				'http://p1.meituan.net/movie/34819eedeb0749c2a6ada071621a4abe4023151.jpg',
+				'http://p0.meituan.net/mmdb/9c440943f5dd2f3dca2ad9300ac3ade51262674.jpg',
+				'http://p0.meituan.net/movie/30e91030ad897b6f8101073cb47566a4358892.jpg',
+				'http://p0.meituan.net/movie/f04fa1fad47fd041839cb9659a25edc7468061.jpg'
+			]
 		}
-		data = {}
-		computed = {}
-		methods = {}
-		events = {}
-		onLoad() {}
+		components = {
+			RuaLocation
+		}
+		methods = {
+			previewImage(item) {
+				wx.previewImage({
+					current: item, // 当前显示图片的http链接
+					urls: this.imagesData // 需要预览的图片http链接列表
+				})
+			}
+		}
+		onShow() {
+			this.location = this.$parent.globalData.location
+		}
 	}
 </script>

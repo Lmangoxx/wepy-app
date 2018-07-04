@@ -1,0 +1,258 @@
+<template>
+	<view class="duanzi-cell">
+		<scroll-view class="duanzi-list">
+			<view></view>
+			<repeat for="{{duanziList}}" key="item" index="index" item="item">
+				<view class="duanzi">
+					<view class="duanzi-main">
+						<view class="header">
+							<image src="{{item.header}}" mode="widthFix" />
+							<view class="user">
+								<view class="name">{{item.username[0]}}</view>
+								<view class="name-s" wx:if="{{item.username_s}}">@{{item.username_s}}</view>
+							</view>
+						</view>
+						<view class="content">
+							<view>{{item.text}}</view>
+							<image class="mt-15" id="{{item.soureid}}" wx:if="{{item.type === 'image'}}" src="{{item.image}}" @tap="previewImage({{item.image}})" mode="widthFix" lazy-load binderror="errHandle" />
+							<image class="mt-15" id="{{item.soureid}}" wx:if="{{item.type === 'gif'}}" src="{{item.gif}}" @tap="previewImage({{item.gif}})" mode="widthFix" lazy-load binderror="errHandle" />
+							<video class="mt-15" id="{{item.soureid}}" wx:if="{{item.type === 'video'}}" src="{{item.video}}" binderror="errHandle" />
+						</view>
+					</view>
+					<view class="duanzi-footer">
+						<view class="item">
+							<view class="icon zan{{item.up_active ? ' active': ''}}" @tap="zan({{index}})">
+								<i>+1</i>
+								<image src="../images/zan{{item.up_active ? '-active' : ''}}.png" />
+								<span>{{item.up}}</span>
+							</view>
+						</view>
+						<view class="item">
+							<view class="icon" @tap="goto({{item}})">
+								<image src="../images/comment.png" />
+								<span>{{item.comment}}</span>
+							</view>
+						</view>
+						<button class="item" open-type="share" plain data-index="{{index}}" data-item="{{item}}">
+							<view class="icon{{item.forward_active ? ' active' : ''}}">
+								<image src="../images/share{{item.forward_active ? '-active' : ''}}.png" />
+								<span>{{item.forward}}</span>
+							</view>
+						</button>
+					</view>
+				</view>
+
+			</repeat>
+			<view class="load-more" @tap="reload()" wx:if="{{frist}}">
+				换一批看看 点击刷新 
+				<image style="width: 32rpx; margin-left: 15rpx;" src="../images/reload.svg" mode="widthFix" />
+			</view>
+		</scroll-view>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	export default class Duanzi extends wepy.page {
+		config = {
+			navigationBarTitleText: '段子手',
+			backgroundColor: '#f4f5f7'
+		}
+		data = {
+			frist: false,
+			duanziList: []
+		}
+		components = {
+		}
+		methods = {
+			previewImage(item) {
+				wx.previewImage({
+					current: item, // 当前显示图片的http链接
+					urls: [item] // 需要预览的图片http链接列表
+				})
+			},
+			zan(index) {
+				if (this.duanziList[index].up_active) {
+					wx.showToast({
+						title: '您已经赞过',
+						icon: 'none',
+						duration: 2000
+					})
+					return
+				}
+				this.duanziList[index].up_active = true
+				this.duanziList[index].up += 1
+			},
+			reload() {
+				wx.pageScrollTo({
+					scrollTop: 0,
+					duration: 0
+				})
+				this.getDuanzi()
+			},
+			goto(item) {
+				let str = JSON.stringify(item)
+				wx.navigateTo({
+					url: `/pages/duanzi_details?item=${str}`
+				})
+			}
+		}
+		onLoad() {
+			this.getDuanzi()
+		}
+		onShareAppMessage(options) {
+			let self = this
+			let data = options.target.dataset
+			return {
+				title: data.item.text,
+				imageUrl: data.item.thumbnail || '../images/logo.jpg',
+				path: `/pages/duanzi_details?item=${JSON.stringify(data.item)}&isIndex=true`,
+				success(res) {
+					let index = data.index * 1
+					self.duanziList[index].forward_active = true
+					self.duanziList[index].forward += 1
+					wx.showToast({
+						title: '分享成功',
+						icon: 'success',
+						duration: 2000
+					})
+				}
+			}
+		}
+		getDuanzi() {
+			this.loadStart()
+			wepy.request(`${this.$parent.globalData.apiopenUrl}/satinGodApi?type=2&page=0`).then(res => {
+				this.duanziList = res.data.data.map((item, index) => {
+					// 处理username
+					item.username = item.username.split(' [')
+					if (item.username[1]) {
+						item.username_s = item.username[1].substring(0, item.username[1].length - 1)
+					}
+					return item
+				})
+				this.loadEnd()
+			})
+		}
+		loadStart() {
+			wx.showLoading({
+				title: '段子加载中'
+			})
+		}
+		loadEnd() {
+			if (!this.frist) this.frist = true
+			wx.hideLoading()
+			this.$apply()
+		}
+		errHandle(e) {
+			// this.duanziList.splice(e.target.dataset.index, 1)
+			// this.duanziList.forEach((item, index) => {
+			// 	if (item.soureid === parseInt(e.target.id)) {
+			// 		this.duanziList.splice(index, 1)
+			// 	}
+			// })
+			// console.log(this.duanziList.length)
+		}
+	}
+</script>
+
+<style lang="less">
+	@import '../styles/variables';
+	.duanzi-list {
+		background-color: #f4f5f7;
+		.duanzi {
+			background-color: white;
+		}
+		.duanzi-footer {
+			display: flex;
+			height: 88rpx;
+			border-top: @--border-default;
+			.item {
+				flex: 1;
+				width: 33.33%;
+				font-size: 27.5rpx;
+				color: #505050;
+				text-align: center;
+				padding: 0;
+				margin: 0;
+				border: none;
+				line-height: 88rpx;
+				background-color: transparent;
+				.icon {
+					position: relative;
+					display: inline-flex;
+					justify-content:center;
+					align-items: center;
+				}
+				image {
+					width: 42rpx;
+					height: 42rpx;
+					margin-right: 15rpx;
+				}
+			}
+		}
+	}
+	.duanzi-main {
+		padding: 26rpx 35rpx;
+		.header {
+			display: flex;
+			font-size: 30rpx;
+			margin-bottom: 18rpx;
+			align-items: center;
+			image {
+				width: 70rpx;
+				height: 70rpx;
+				border-radius: 100%;
+				margin-right: 25rpx;
+			}
+			.user {
+				flex: 1;
+				.name {
+					padding-top: 5rpx;
+					color: #111;
+					font-weight: 800;
+				}
+				.name-s {
+					font-size: 24rpx;
+					color:#999;
+				}
+			}
+		}
+		.content {
+			font-size: 34rpx;
+			color: #333;
+			line-height: 50rpx;
+			image {
+				width: 100%;
+			}
+			video {
+				width: 100%;
+			}
+		}
+	}
+	.duanzi + .duanzi{
+		margin-top: 16rpx;
+	}
+	.zan {
+		i {
+			position: absolute;
+			top: 0;
+			left: 10rpx;
+			font-weight: bold;
+			opacity: 0;
+		}
+		&.active {
+			image {
+				animation-duration: .45s;
+				-webkit-animation-duration: .45s;
+				animation-name: zan-hide;
+				-webkit-animation-name: zan-hide;
+			}
+			i {
+				animation-duration: .45s;
+				-webkit-animation-duration: .45s;
+				animation-name: zan-num-hide;
+				-webkit-animation-name: zan-num-hide;
+			}
+		}
+	}
+</style>

@@ -1,17 +1,3 @@
-<style lang="less">
-	// 引入字体 
-	@import './styles/fonts/iconfont';
-	@import './styles/variables';
-	.container {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: space-between;
-		box-sizing: border-box;
-	}
-</style>
-
 <script>
 	import wepy from 'wepy'
 	import 'wepy-async-function'
@@ -25,43 +11,56 @@
 	export default class extends wepy.app {
 		config = {
 			pages: [
-				'pages/movie',
 				'pages/weather',
-				'pages/index',
-				'pages/city'
+				'pages/duanzi',
+				'pages/duanzi_details',
+				'pages/movie',
+				'pages/city',
+				'pages/index'
 			],
 			window: {
-				backgroundTextStyle: 'light',
-				navigationBarBackgroundColor: '#e54847',
-				navigationBarTitleText: 'WeChat',
+				navigationBarBackgroundColor: '#008de1',
+				navigationBarTitleText: 'Ruas',
 				navigationBarTextStyle: 'white',
-				backgroundColor: '#eeeeee'
+				backgroundColor: '#eeeeee',
+				onReachBottomDistance: 0
 			},
 			tabBar: {
-				color: '#8a8a8a',
-				selectedColor: '#17abe3',
+				color: '#696969',
+				selectedColor: '#008de1',
 				backgroundColor: '#ffffff',
 				borderStyle: '#ddd',
-				list: [{
-					pagePath: 'pages/index',
-					text: '首页',
-					iconPath: './images/tabbar/home.png',
-					selectedIconPath: './images/tabbar/home-active.png'
-				}, {
-					pagePath: 'pages/weather',
-					text: '天气',
-					iconPath: './images/tabbar/weather.png',
-					selectedIconPath: './images/tabbar/weather-active.png'
-				}, {
-					pagePath: 'pages/movie',
-					text: '电影',
-					iconPath: './images/tabbar/weather.png',
-					selectedIconPath: './images/tabbar/weather-active.png'
-				}]
+				list: [
+					// {
+					// 	pagePath: 'pages/index',
+					// 	text: '首页',
+					// 	iconPath: './images/tabbar/home.png', // 图标的实际高度是54px, 画布大小是70px
+					// 	selectedIconPath: './images/tabbar/home-active.png'
+					// },
+					{
+						pagePath: 'pages/weather',
+						text: '天气',
+						iconPath: './images/tabbar/weather.png',
+						selectedIconPath: './images/tabbar/weather-active.png'
+					},
+					{
+						pagePath: 'pages/duanzi',
+						text: '段子手',
+						iconPath: './images/tabbar/duanzi.png', // 图标的实际高度是54px, 画布大小是70px
+						selectedIconPath: './images/tabbar/duanzi-active.png'
+					},
+					{
+						pagePath: 'pages/movie',
+						text: '电影',
+						iconPath: './images/tabbar/movie.png',
+						selectedIconPath: './images/tabbar/movie-active.png'
+					}
+				]
 			}
 		}
 		globalData = {
-			location: ''
+			location: '',
+			apiopenUrl: 'https://www.apiopen.top'
 		}
 		constructor() {
 			super()
@@ -69,9 +68,21 @@
 			this.use('promisify')
 		}
 		async onLaunch() {
-			const location = await new API().location()
+			const location = wx.getStorageSync('hostoryCity') || await new API().location()
 			this.globalData.location = location
-			// this.$apply()
 		}
 	}
 </script>
+
+<style lang="less">
+	// 引入字体 
+	@import './styles/commont';
+	.container {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+		box-sizing: border-box;
+	}
+</style>

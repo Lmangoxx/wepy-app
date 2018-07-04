@@ -1,0 +1,33 @@
+<template>
+	<view class="no-result-cell">
+		<image src="../images/no-result.png" />
+		<view style="margin-top: 15rpx;">未找到相关信息</view>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	export default class NoResult extends wepy.component {
+		data = {
+		}
+		onLoad() {
+		}
+	}
+</script>
+
+<style lang="less">
+	.no-result-cell {
+		height: 100%;
+		width: 100%;
+		font-size: 28rpx;
+		color: #999;
+		text-align: center;
+		background-color: white;
+		padding-top: 30%;
+		box-sizing: border-box;
+		image {
+			width: 184rpx;
+			height: 120rpx;
+		}
+	}
+</style>

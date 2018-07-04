@@ -1,54 +1,421 @@
-<style lang="less">
-	@import '../styles/variables';
-	.weather-cell {
-		width: 100%;
-		height: 100vh;
-		background: @--color-primary;
-		color: white;
-	}
-	i {
-		color: @--color-primary;
-		font-size: 30px;
-	}
-</style>
-
 <template>
 	<view class="weather-cell">
-		<view>城市：{{weatherData.currentCity}}</view>
-		<view>PM2.5：{{weatherData.pm25}}</view>
-		<view>日期：{{weatherData.date}}</view>
-		<view>温度：{{weatherData.temperature}}</view>
-		<view>天气：<i class="icon-duoyunye"></i>{{weatherData.weatherDesc}}</view>
-		<view>风力：{{weatherData.wind}}</view>
+		<view class="weather-main">
+			<RuaLocation class="weather-location" :location.sync="location">
+				<image slot="prepend" style="width: 32rpx; vertical-align: -4rpx;" mode="widthFix" src="../images/location.svg" />
+				<text slot="append"></text>
+			</RuaLocation>
+			<view class="weather-prompt">
+				<view class="item" style="background-color: {{pmLvl.color}}">
+					<view class="value{{animate ? ' show' : ''}}">{{weatherData.currentWeather[0].pm25}}</view>
+					<view class="value{{!animate ? ' show' : ''}}">{{pmLvl.title}}</view>
+				</view>
+				<view class="item" style="margin-top: 30rpx; background: {{highTemperature.color}}" wx:if="{{highTemperature.color}}" @tap="openWindow({{highTemperature.color}}, {{highTemperature.title}}, {{highTemperature.info}})">高温</view>
+			</view>
+			<view style="text-align: center; margin-top: 50rpx;">
+				<view class="weather-realtime">
+					{{weatherData.currentWeather[0].date || '-'}}
+				</view>
+				<view class="weather-desc">{{weatherData.currentWeather[0].weatherDesc}}</view>
+				<view class="weather-wind">
+					<image style="width: 36rpx; vertical-align: -6rpx;" mode="widthFix" src="../images/wind.svg"></image>
+					{{weatherData.currentWeather[0].wind || '-'}}
+				</view>
+			</view>
+		</view>
+		<view class="weather-other" wx:if="{{weatherData.originalData}}">
+			<view class="weather-days">
+				<repeat for="{{weatherData.originalData.results[0].weather_data}}" key="item" index="index" item="item">
+					<view class="item">
+						<view class="day">{{index === 0 ? '今天' : item.date}}</view>
+						<view class="weather">{{item.weather[0]}}</view>
+						<view class="picture">
+							<image src="{{item.dayPictureUrl}}" />
+						</view>
+						<view class="temperature">{{item.temperature[0] + '℃'}}</view>
+						<view class="line"></view>
+						<view class="temperature">{{item.temperature[1]}}</view>
+						<view class="picture">
+							<image src="{{item.nightPictureUrl}}" />
+						</view>
+						<view class="weather">{{item.weather[1] || item.weather[0]}}</view>
+						<view class="wind">{{item.wind}}</view>
+					</view>
+				</repeat>
+			</view>
+			<view class="weather-index cf">
+				<repeat for="{{weatherData.originalData.results[0].index}}" key="item" index="index" item="item">
+					<view class="item" @tap="openWindow({{windowColors[index]}}, {{item.tipt}}, {{item.des}})">
+						<view>
+							<image src="../images/weather/index/index_{{index}}.svg" />
+						</view>
+						<view>{{item.zs}}</view>
+						<view class="title">{{item.title}}</view>
+					</view>
+				</repeat>
+			</view>
+		</view>
+		<NoResult wx:else></NoResult>
+		<RuaWindow :show.sync="windowShow" :themeColor.sync="themeColor" :title.sync="windowTitle" :info.sync="windowInfo"></RuaWindow>
 	</view>
 </template>
 
 <script>
 	import wepy from 'wepy'
+	import RuaLocation from '@/components/location'
+	import RuaWindow from '@/components/window'
+	import NoResult from '@/components/noResult'
 	const bmap = require('@/libs/bmap/bmap')
+	const BMap = new bmap.BMapWX()
 	export default class Weather extends wepy.page {
 		config = {
-			navigationBarTitleText: '天气'
+			navigationBarTitleText: '天气',
+			// enablePullDownRefresh: true,
+			disableScroll: true,
+			backgroundColor: '#e54847',
+			backgroundTextStyle: 'light'
 		}
 		data = {
-			weatherData: {}
+			location: '',
+			animate: true,
+			weatherData: {},
+			pmLvl: {},
+			highTemperature: {},
+			windowColors: ['rgb(225, 164, 196)', 'rgb(181, 230, 168)', 'rgb(223, 199, 156)', 'rgb(230, 217, 157)', 'rgb(219, 173, 160)'],
+			windowShow: false,
+			themeColor: '',
+			windowTitle: '',
+			windowInfo: ''
 		}
-		computed = {}
-		methods = {}
-		events = {}
+		components = {
+			RuaLocation,
+			RuaWindow,
+			NoResult
+		}
+		methods = {
+			openWindow(color, title, info) {
+				this.themeColor = color
+				this.windowTitle = title
+				this.windowInfo = info
+				this.windowShow = true
+				this.$apply()
+			}
+		}
+		// onPullDownRefresh() {
+		// 	this.getWeather()
+		// }
+		onShow() {
+			this.getWeather()
+			// wx.stopPullDownRefresh()
+		}
 		onLoad() {
+			wx.captureScreen({
+				success(res) {
+					console.log(res)
+				}
+			})
+			setInterval(() => {
+				this.animate = !this.animate
+				this.$apply()
+			}, 3000)
+		}
+		getWeather() {
 			let self = this
-			let BMap = new bmap.BMapWX()
-			console.log(self.$parent.globalData.location)
+			wx.showLoading({
+				title: '天气加载中'
+			})
+			self.location = self.$parent.globalData.location
 			BMap.weather({
+				location: `${self.location}|`,
 				success(data) {
-					self.weatherData = data.currentWeather[0]
-					self.$apply()
+					let highTemperature = []
+					self.pm2lvl(data.currentWeather[0].pm25)
+					data.currentWeather[0].date = self.realTime(data.currentWeather[0].date)
+					data.originalData.results[0].weather_data.forEach((item, index) => {
+						item.dayPictureUrl = self.replaceUrl(item.dayPictureUrl)
+						item.nightPictureUrl = self.replaceUrl(item.nightPictureUrl)
+						item.weather = item.weather.split('转')
+						item.temperature = item.temperature.split(' ~ ')
+						item.wind = item.wind === '无持续风向微风' ? '微风' : item.wind
+						let ht = item.temperature[0]
+						if (index === 1) {
+							let num = 0
+							if (ht >= 35) num = 1
+							if (ht >= 37) num = 2
+							if (ht >= 40) num = 3
+							highTemperature.push(num)
+						} else if (index > 1) {
+							ht >= 35 ? highTemperature.push(1) : highTemperature.push(0)
+						}
+					})
+					self.num2hight(highTemperature)
+					self.weatherData = data
+					self.loadingEnd()
 				},
 				fail(err) {
 					console.log('BMap.weather is error!', err)
+					self.weatherData = {}
+					self.pmLvl = {
+						title: '-',
+						color: '#a3d765'
+					}
+					self.highTemperature = {}
+					self.loadingEnd()
 				}
 			})
 		}
+		num2hight(arr) {
+			let self = this
+			switch (arr[0]) {
+				case 1:
+					if (arr[1] === 1 && arr[2] === 1) {
+						self.highTemperature = {
+							title: '高温黄色预警',
+							info: `${self.location}发布高温黄色预警，预计未来三天，${self.location}最高气温将达到35℃以上，请注意防范，尽量减少室外活动。`,
+							color: '#f5d271'
+						}
+					} else {
+						self.highTemperature = {}
+					}
+					break
+				case 2:
+					self.highTemperature = {
+						title: '高温橙色预警',
+						info: `${self.location}发布高温橙色预警，预计未来24小时内，${self.location}最高气温将达到37℃以上，请注意防范，尽量减少室外活动。`,
+						color: '#ef8c6b'
+					}
+					break
+				case 3:
+					self.highTemperature = {
+						title: '高温红色预警',
+						info: `${self.location}发布高温红色预警，预计未来24小时内，${self.location}最高气温将达到40℃以上，请注意防范，尽量减少室外活动。`,
+						color: 'red'
+					}
+					break
+			}
+		}
+		pm2lvl(pm) {
+			if (pm <= 50) this.pmLvl = {title: '优', color: '#a3d765'}
+			if (pm > 50 && pm <= 100) this.pmLvl = {title: '良', color: '#f0cc35'}
+			if (pm > 100 && pm <= 150) this.pmLvl = {title: '轻度', color: '#f1ab62'}
+			if (pm > 150 && pm <= 200) this.pmLvl = {title: '中度', color: '#ef7f77'}
+			if (pm > 200 && pm <= 300) this.pmLvl = {title: '重度', color: '#b28ccb'}
+			if (pm > 300) this.pmLvl = {title: '严重', color: '#ad788a'}
+		}
+		realTime(data) {
+			let start = data.indexOf('：') + 1
+			let end = data.indexOf('℃')
+			return data.substring(start, end)
+		}
+		replaceUrl(url) {
+			return url.replace('http://api.map.baidu.com/images/weather/', '../images/weather/').replace('png', 'svg')
+		}
+		loadingEnd() {
+			wx.hideLoading()
+			this.$apply()
+		}
 	}
 </script>
+
+<style lang="less">
+	@import '../styles/variables';
+	.weather-cell {
+		background-color: #f4f4f4;
+		overflow: hidden;
+		.weather-main {
+			position: relative;
+			width: 100%;
+			height: 33.33vh;
+			font-size: 32rpx;
+			color: white;
+			padding: 0 32rpx;
+			background: @--color-primary;
+			box-sizing: border-box;
+		}
+		.weather-location {
+			height: 32rpx;
+			line-height: 32rpx;
+		}
+		.weather-prompt {
+			position: absolute;
+			top: 40rpx;
+			right: 32rpx;
+			z-index: 99;
+			.item {
+				position: relative;
+				width: 66rpx;
+				height: 66rpx;
+				line-height: 70rpx;
+				font-size: 29rpx;
+				text-align: center;
+				background: #ffbf62;
+				border-radius: 14rpx;
+				box-shadow: 0 2rpx 2rpx 0 rgba(0, 0, 0, .12);
+				overflow: hidden;
+				.value {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					animation-fill-mode: forwards;
+					-webkit-animation-fill-mode: forwards;
+					animation-duration: .75s;
+					-webkit-animation-duration: .75s;
+					animation-name: wind-hide;
+					-webkit-animation-name: wind-hide;
+					&.show {
+						animation-name: wind-show;
+						-webkit-animation-name: wind-show;
+					}
+				}
+			}
+		}
+		.weather-realtime {
+			display: inline-block;
+			font-size: 115rpx;
+			height: 115rpx;
+			line-height: 115rpx;
+			position: relative;
+			&:after {
+				content: "\B0";
+				position: absolute;
+				top: 0;
+				right: 0;
+				transform: translateX(100%);
+				-webkit-transform: translateX(100%);
+				text-align: left;
+			}
+		}
+		.weather-desc {
+			display: inline-block;
+			height: 30rpx;
+			line-height: 30rpx;
+			font-size: 28rpx;
+			margin-left: 40rpx;
+		}
+		.weather-wind {
+			font-size: 30rpx;
+			margin-top: 20rpx;
+		}
+		.weather-other {
+			height: 66.67vh;
+			padding-bottom: 190rpx;
+			box-sizing: border-box;
+			position: relative;
+		}
+		.weather-days {
+			display: flex;
+			height: 100%;
+			padding: 20rpx 0;
+			background-color: white;
+			border-top: @--border-default;
+			border-bottom: @--border-default;
+			box-sizing: border-box;
+			.item {
+				width: 25%;
+				flex: 1;
+				font-size: 28rpx;
+				color: #434343;
+				text-align: center;
+				border-right: @--border-default;
+				box-sizing: border-box;
+				.day {
+					color: #999;
+				}
+				.weather,
+				.temperature {
+					margin: 12rpx 0;
+				}
+				.line {
+					opacity: 0.5;
+					display: inline-block;
+					height: 40rpx;
+					width: 1rpx;
+					border-right: 1rpx solid #b2b2b2;
+					margin-left: -1rpx;
+				}
+				image {
+					width: 48rpx; // 42*30
+					height: 48rpx;
+				}
+				.wind {
+					font-size: 27rpx;
+					color: #b2b2b2;
+				}
+			}
+		}
+		.weather-index {
+			position: absolute;
+			left: 0;
+			bottom: 20rpx;
+			width: 100%;
+			border-top: @--border-default;
+			border-bottom: @--border-default;
+			overflow: hidden;
+			.item {
+				width: 20%;
+				height: 150rpx;
+				float: left;
+				font-size: 27rpx;
+				color: #434343;
+				text-align: center;
+				padding-top: 10rpx;
+				border-right: @--border-default;
+				background-color: white;
+				box-sizing: border-box;
+				image {
+					width: 49rpx;
+					height: 49rpx;
+				}
+				.title {
+					font-size: 24rpx;
+					color: #999;
+				}
+			}
+		}
+	}
+	i {
+		font-size: 60rpx;
+	}
+	@keyframes wind-show {
+		0% {
+			transform: translate3d(0, 14px, 0);
+			opacity: 0;
+		}
+		to {
+			transform: translateZ(0);
+			opacity: 1;
+		}
+	}
+	@-webkit-keyframes wind-show {
+		0% {
+			-webkit-transform: translate3d(0, 14px, 0);
+			opacity: 0;
+		}
+		to {
+			-webkit-transform: translateZ(0);
+			opacity: 1;
+		}
+	}
+	@keyframes wind-hide {
+		0% {
+			transform: translateZ(0);
+			opacity: 1;
+		}
+		to {
+			transform: translate3d(0, -14px, 0);
+			opacity: 0;
+		}
+	}
+	@-webkit-keyframes wind-hide {
+		0% {
+			-webkit-transform: translateZ(0);
+			opacity: 1;
+		}
+		to {
+			-webkit-transform: translate3d(0, -14px, 0);
+			opacity: 0;
+		}
+	}
+</style>

@@ -1,0 +1,98 @@
+<template>
+	<view class="rua-search">
+		<view class="search-input">
+			<image class="search" src="../images/search.png" />
+			<input type="text" class="input" value="{{value}}" @focus="onFocus()" @input="onInput({{$event}})" confirm-type="search" placeholder="{{placeholder}}" />
+			<image wx:if="{{value}}" @tap="onCLear()" class="clear" src="../images/clear.png" />
+		</view>
+		<text wx:if="{{showCancel}}" class="search-cancel" @tap="onCancel()">取消</text>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	export default class RuaSearch extends wepy.component {
+		props = {
+			value: {
+				type: String,
+				default: '',
+				twoWay: true
+			},
+			placeholder: {
+				type: String,
+				default: '请输入'
+			}
+		}
+		data = {
+			showCancel: false
+		}
+		methods = {
+			onFocus() {
+				this.showCancel = true
+				this.$emit('onFocus', this.value)
+			},
+			onInput(e) {
+				let data = e.detail.value.trim()
+				this.value = data
+				this.$emit('onInput', data)
+			},
+			onCLear() {
+				this.value = ''
+				this.$emit('onClear', this.value)
+			},
+			onCancel() {
+				this.value = ''
+				this.showCancel = false
+				this.$emit('onCancel', this.value)
+			}
+		}
+	}
+</script>
+
+<style lang="less">
+	@import '../styles/variables';
+	@--search-height-default: 60rpx;
+	@--search-border-default: 0.5rpx solid #e6e6e6;
+	@--search-font-size-default: 27.5rpx;
+	.rua-search {
+		display: flex;
+		width: 100%;
+		font-size: @--search-font-size-default;
+		padding: 20rpx;
+		box-sizing: border-box;
+		.search-input {
+			position: relative;
+			flex: 1;
+			padding: 0 60rpx;
+			border: @--search-border-default;
+			border-radius: 10rpx;
+			box-sizing: border-box;
+			background-color: white;
+			color: #000;
+			image {
+				position: absolute;
+				width: 30rpx;
+				height: 30rpx;
+				top: 50%;
+				margin-top: -15rpx;
+				&.search {
+					left: 20rpx;
+				}
+				&.clear {
+					right: 15rpx;
+				}
+			}
+			.input {
+				height: @--search-height-default;
+				line-height: @--search-height-default;
+			}
+		}
+		.search-cancel {
+			color: #666;
+			line-height: @--search-height-default;
+			padding-left: 16rpx;
+			font-size: @--search-font-size-default;
+			color: @--color-primary;
+		}
+	}
+</style>

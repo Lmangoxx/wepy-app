@@ -1,0 +1,54 @@
+<template>
+	<view class="rua-location" @tap="goto('/pages/city')">
+		<slot name="prepend"></slot>
+		{{location}}
+		<slot name="append"><i></i></slot>
+	</view>
+</template>
+
+<script>
+	import wepy from 'wepy'
+	import API from '@/api/index'
+	export default class RuaLocation extends wepy.component {
+		props = {
+			location: {
+				type: String,
+				default: '定位中',
+				twoWay: true
+			}
+		}
+		methods = {
+			goto(url) {
+				wx.navigateTo({
+					url: url
+				})
+			}
+		}
+		async onLoad() {
+			this.location = wx.getStorageSync('hostoryCity') || await new API().location()
+			this.$apply()
+		}
+	}
+</script>
+
+<style lang="less">
+	.rua-location {
+		display: inline-block;
+		position: relative;
+		padding-right: 26rpx;
+		i {
+			position: absolute;
+			top: 50%;
+			right: 0;
+			display: inline-block;
+			width: 0;
+			height: 0;
+			border: 10rpx solid #b0b0b0;
+			border-left-color: transparent;
+			border-right-color: transparent;
+			border-bottom: none;
+			border-radius: 5rpx;
+			margin-top: -5rpx;
+		}
+	}
+</style>

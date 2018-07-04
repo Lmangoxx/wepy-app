@@ -5,9 +5,10 @@ export default class testMixin extends wepy.mixin {
 		mixin: 'This is mixin data.'
 	}
 	methods = {
-		tap () {
-			this.mixin = 'mixin data was changed'
-			console.log('mixin method tap')
+		goto(url) {
+			wx.navigateTo({
+				url: url
+			})
 		}
 	}
 

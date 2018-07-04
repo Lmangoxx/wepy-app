@@ -1,4 +1,4 @@
-@import '../styles/variables';
+@import './variables';
 .cf {
     zoom: 1;
     &:after {
@@ -9,4 +9,77 @@
         overflow: hidden;
         visibility: hidden;
     }    
+}
+.color-primary,
+.active {
+    color: @--color-primary;
+}
+.text-center {
+    text-align: center;
+}
+.all-center {
+    display: flex;
+    justify-content:center;
+    align-items: center;
+}
+
+.load-more {
+    height: 90rpx;
+    font-size: 29rpx;
+    color: #999;
+    .all-center;
+}
+.mt-15 {
+    margin-top: 15rpx;
+}
+
+@keyframes keyRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+@-webkit-keyframes keyRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes zan-hide {
+    0% {
+        transform: scale(0.5);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+@-webkit-keyframes zan-hide {
+    0% {
+        transform: scale(0.5);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+@keyframes zan-num-hide {
+    0% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        top: -30rpx;
+    }
+}
+@-webkit-keyframes zan-num-hide {
+    0% {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        top: -30rpx;
+    }
 }
